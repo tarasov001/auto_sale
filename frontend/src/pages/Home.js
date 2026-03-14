@@ -156,35 +156,34 @@ function Home() {
                     src={imageUrl}
                     className="card-img-top"
                     alt={`${car.brand} ${car.model}`}
-                    style={{ height: '150px', objectFit: 'cover' }}
+                    style={{ height: '200px', objectFit: 'cover' }}
                     onError={(e) => {
                       e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:150px"><span class="text-white-50 small">Нет фото</span></div>';
+                      e.target.parentElement.innerHTML = '<div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:200px"><span class="text-white-50 small">Нет фото</span></div>';
                     }}
                   />
                 ) : (
                   <div
                     className="card-img-top bg-secondary d-flex align-items-center justify-content-center"
-                    style={{ height: '150px' }}
+                    style={{ height: '200px' }}
                   >
                     <span className="text-white-50 small">Нет фото</span>
                   </div>
                 )}
                 <div className="card-body p-2">
-                  <h6 className="card-title mb-1 text-truncate">
-                    {car.brand} {car.model}
-                  </h6>
-                  <p className="card-text mb-1">
-                    <strong className="text-primary">{formatPrice(car.price)} ₽</strong>
-                  </p>
-                  <p className="card-text small text-muted mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <h6 className="card-title mb-0 text-truncate" style={{maxWidth: '60%'}}>
+                      {car.brand} {car.model}
+                    </h6>
+                    <strong className="text-primary ms-2">
+                      {formatPrice(car.price)} ₽
+                    </strong>
+                  </div>
+                  <p className="card-text small text-muted mb-0">
                     {car.year} г., {car.mileage} км
                   </p>
-                  {car.description && (
-                    <p className="card-text small text-muted mb-2 text-truncate" title={car.description}>
-                      {car.description}
-                    </p>
-                  )}
+                </div>
+                <div className="card-footer bg-white border-0 p-2">
                   <Link to={`/car/${car.id}`} className="btn btn-sm btn-primary w-100">
                     Подробнее
                   </Link>
