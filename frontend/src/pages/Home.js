@@ -146,45 +146,41 @@ function Home() {
       ) : (
         <div className="row">
           {cars.map((car) => {
-            console.log(`Автомобиль ${car.id}:`, car); // Отладка
-            const hasImages = car.images && car.images.length > 0;
-            const imageUrl = hasImages ? car.images[0].image : null;
-            console.log(`Фото для ${car.id}:`, imageUrl);
+            const imageUrl = car.image;
             
             return (
-            <div key={car.id} className="col-md-4 mb-4">
-              <div className="card h-100">
-                {hasImages && imageUrl ? (
+            <div key={car.id} className="col-md-3 col-sm-6 mb-3">
+              <div className="card h-100 shadow-sm">
+                {imageUrl ? (
                   <img
                     src={imageUrl}
                     className="card-img-top"
                     alt={`${car.brand} ${car.model}`}
-                    style={{ height: '200px', objectFit: 'cover' }}
+                    style={{ height: '150px', objectFit: 'cover' }}
                     onError={(e) => {
-                      console.error('Ошибка загрузки изображения:', imageUrl);
                       e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:200px"><span class="text-white">Фото недоступно</span></div>';
+                      e.target.parentElement.innerHTML = '<div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:150px"><span class="text-white-50 small">Нет фото</span></div>';
                     }}
                   />
                 ) : (
                   <div
                     className="card-img-top bg-secondary d-flex align-items-center justify-content-center"
-                    style={{ height: '200px' }}
+                    style={{ height: '150px' }}
                   >
-                    <span className="text-white">Нет фото</span>
+                    <span className="text-white-50 small">Нет фото</span>
                   </div>
                 )}
-                <div className="card-body">
-                  <h5 className="card-title">
+                <div className="card-body p-2">
+                  <h6 className="card-title mb-1 text-truncate">
                     {car.brand} {car.model}
-                  </h5>
-                  <p className="card-text">
-                    <strong>{formatPrice(car.price)} ₽</strong>
+                  </h6>
+                  <p className="card-text mb-1">
+                    <strong className="text-primary">{formatPrice(car.price)} ₽</strong>
                   </p>
-                  <p className="card-text text-muted">
-                    {car.year} год • {car.mileage} км
+                  <p className="card-text small text-muted mb-2">
+                    {car.year} г., {car.mileage} км
                   </p>
-                  <Link to={`/car/${car.id}`} className="btn btn-primary">
+                  <Link to={`/car/${car.id}`} className="btn btn-sm btn-primary w-100">
                     Подробнее
                   </Link>
                 </div>
