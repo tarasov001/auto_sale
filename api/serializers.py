@@ -74,7 +74,7 @@ class CarSerializer(serializers.ModelSerializer):
 
 
 class CarCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания автомобиля"""
+    """Сериализатор для создания/обновления автомобиля"""
     id = serializers.IntegerField(read_only=True)
     images = serializers.ListField(
         child=serializers.ImageField(),
@@ -89,9 +89,23 @@ class CarCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         images_data = validated_data.pop('images', [])
         car = Car.objects.create(**validated_data)
-        
+
         # Сохраняем изображения
         for image_data in images_data:
             CarImage.objects.create(car=car, image=image_data)
-        
+
         return car
+
+    def update(self, instance, validated_data):
+        images_data = validated_data.pop('images', [])
+        
+        # Обновляем поля автомобиля
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Сохраняем новые изображения
+        for image_data in images_data:
+            CarImage.objects.create(car=instance, image=image_data)
+
+        return instance

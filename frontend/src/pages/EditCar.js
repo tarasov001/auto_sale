@@ -70,20 +70,30 @@ function EditCar() {
     setLoading(true);
 
     try {
-      await api.patch(`/cars/${id}/`, formData);
+      // Создаем FormData для отправки с файлами
+      const formDataToSend = new FormData();
+      formDataToSend.append('brand', formData.brand);
+      formDataToSend.append('model', formData.model);
+      formDataToSend.append('year', formData.year);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('mileage', formData.mileage || 0);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('phone', formData.phone);
+      
+      // Добавляем новые фото
+      images.forEach((image) => {
+        formDataToSend.append('images', image);
+      });
 
-      // Загружаем новые фото
-      for (const image of images) {
-        const imageForm = new FormData();
-        imageForm.append('image', image);
-        imageForm.append('car_id', id);
-        await api.post('/car-images/', imageForm, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      }
+      // Обновляем автомобиль
+      await api.patch(`/cars/${id}/`, formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       navigate('/cabinet');
     } catch (err) {
+      console.error('Ошибка:', err);
+      console.error('Ответ:', err.response?.data);
       if (err.response?.data) {
         setErrors(err.response.data);
       } else {
@@ -263,6 +273,26 @@ function EditCar() {
                   multiple
                   accept="image/*"
                 />
+                <div className="form-text">
+                  Можно выбрать несколько файлов
+                </div>
+                {images.length > 0 && (
+                  <div className="mt-2 d-flex gap-2 flex-wrap">
+                    {images.map((file, idx) => (
+                      <div key={idx} className="position-relative">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Фото ${idx + 1}`}
+                          className="rounded"
+                          style={{ width: '80px', height: '60px', objectFit: 'cover' }}
+                        />
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                          {idx + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button
