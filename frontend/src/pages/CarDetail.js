@@ -31,6 +31,18 @@ function CarDetail() {
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
 
+  const prevImage = () => {
+    setCurrentImageIndex(prev => 
+      prev === 0 ? allImages.length - 1 : prev - 1
+    );
+  };
+
+  const nextImage = () => {
+    setCurrentImageIndex(prev => 
+      prev === allImages.length - 1 ? 0 : prev + 1
+    );
+  };
+
   if (loading) {
     return <div className="text-center">Загрузка...</div>;
   }
@@ -40,6 +52,7 @@ function CarDetail() {
   }
 
   const allImages = car.images?.length > 0 ? car.images.map(img => img.image) : [];
+  const hasMultipleImages = allImages.length > 1;
 
   return (
     <div>
@@ -48,72 +61,117 @@ function CarDetail() {
       </Link>
 
       <div className="row">
-        <div className="col-md-8">
+        <div className="col-lg-8">
           <div className="card mb-4">
             {allImages.length > 0 ? (
               <>
-                <img
-                  src={allImages[currentImageIndex]}
-                  className="card-img-top"
-                  alt={`${car.brand} ${car.model}`}
-                  style={{ maxHeight: '400px', objectFit: 'cover' }}
-                />
-                {allImages.length > 1 && (
-                  <div className="d-flex gap-2 p-2 overflow-auto">
-                    {allImages.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`Фото ${idx + 1}`}
-                        className={`thumbnail ${idx === currentImageIndex ? 'border-primary' : ''}`}
-                        style={{ width: '80px', height: '60px', objectFit: 'cover', cursor: 'pointer' }}
-                        onClick={() => setCurrentImageIndex(idx)}
-                      />
-                    ))}
+                <div className="position-relative">
+                  <img
+                    src={allImages[currentImageIndex]}
+                    className="card-img-top"
+                    alt={`${car.brand} ${car.model}`}
+                    style={{ maxHeight: '500px', objectFit: 'cover' }}
+                  />
+                  
+                  {/* Кнопки навигации */}
+                  {hasMultipleImages && (
+                    <>
+                      <button
+                        className="btn btn-dark position-absolute top-50 start-0 translate-middle-y rounded-circle"
+                        onClick={prevImage}
+                        style={{ width: '40px', height: '40px', opacity: 0.7 }}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        className="btn btn-dark position-absolute top-50 end-0 translate-middle-y rounded-circle"
+                        onClick={nextImage}
+                        style={{ width: '40px', height: '40px', opacity: 0.7 }}
+                      >
+                        ›
+                      </button>
+                      <span className="position-absolute top-0 end-0 bg-dark text-white px-2 py-1 m-2 rounded small">
+                        {currentImageIndex + 1} / {allImages.length}
+                      </span>
+                    </>
+                  )}
+                </div>
+                
+                {/* Миниатюры */}
+                {hasMultipleImages && (
+                  <div className="card-body border-top">
+                    <div className="d-flex gap-2 overflow-auto">
+                      {allImages.map((img, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={`flex-shrink-0 position-relative ${
+                            idx === currentImageIndex ? 'border border-primary border-2' : 'border'
+                          }`}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <img
+                            src={img}
+                            alt={`Фото ${idx + 1}`}
+                            style={{ width: '100px', height: '75px', objectFit: 'cover' }}
+                            className="rounded"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
             ) : (
               <div
                 className="card-img-top bg-secondary d-flex align-items-center justify-content-center"
-                style={{ height: '300px' }}
+                style={{ height: '400px' }}
               >
                 <span className="text-white">Нет фото</span>
               </div>
             )}
+            
             <div className="card-body">
-              <h1 className="card-title">
+              <h1 className="card-title mb-3">
                 {car.brand} {car.model}
               </h1>
               <h2 className="text-primary mb-3">
                 {formatPrice(car.price)} ₽
               </h2>
-              <table className="table table-bordered">
-                <tbody>
-                  <tr>
-                    <th>Год выпуска</th>
-                    <td>{car.year}</td>
-                  </tr>
-                  <tr>
-                    <th>Пробег</th>
-                    <td>{car.mileage} км</td>
-                  </tr>
-                  <tr>
-                    <th>Описание</th>
-                    <td>{car.description || 'Не указано'}</td>
-                  </tr>
-                  <tr>
-                    <th>Дата размещения</th>
-                    <td>{formatDate(car.created_at)}</td>
-                  </tr>
-                </tbody>
-              </table>
+              
+              <div className="row g-3 mb-3">
+                <div className="col-md-4">
+                  <div className="p-3 bg-light rounded text-center">
+                    <small className="text-muted d-block">Год выпуска</small>
+                    <strong className="fs-5">{car.year}</strong>
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="p-3 bg-light rounded text-center">
+                    <small className="text-muted d-block">Пробег</small>
+                    <strong className="fs-5">{car.mileage} км</strong>
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="p-3 bg-light rounded text-center">
+                    <small className="text-muted d-block">Дата размещения</small>
+                    <strong className="fs-6">{formatDate(car.created_at)}</strong>
+                  </div>
+                </div>
+              </div>
+              
+              {car.description && (
+                <div>
+                  <h5 className="mb-2">Описание</h5>
+                  <p className="card-text">{car.description}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="col-md-4">
-          <div className="card">
+        <div className="col-lg-4">
+          <div className="card mb-4">
             <div className="card-header bg-primary text-white">
               Контакты продавца
             </div>
@@ -123,21 +181,43 @@ function CarDetail() {
               </p>
               <p className="mb-3">
                 <strong>Телефон:</strong>{' '}
-                <a href={`tel:${car.phone}`} className="text-decoration-none">
+                <a href={`tel:${car.phone}`} className="text-decoration-none fs-5">
                   {car.phone}
                 </a>
               </p>
-              <a href={`tel:${car.phone}`} className="btn btn-success w-100 mb-2">
-                Позвонить
+              <a href={`tel:${car.phone}`} className="btn btn-success w-100 mb-2 btn-lg">
+                📞 Позвонить
               </a>
               <a
                 href={`https://wa.me/${car.phone.replace(/[^0-9]/g, '')}`}
-                className="btn btn-success w-100"
+                className="btn btn-success w-100 mb-2"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Написать в WhatsApp
+                💬 WhatsApp
               </a>
+              <a
+                href={`https://t.me/+${car.phone.replace(/[^0-9]/g, '')}`}
+                className="btn btn-outline-primary w-100"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ✈️ Telegram
+              </a>
+            </div>
+          </div>
+          
+          <div className="card">
+            <div className="card-header bg-info text-white">
+              Информация
+            </div>
+            <div className="card-body">
+              <p className="mb-2 small">
+                <strong>ID объявления:</strong> #{car.id}
+              </p>
+              <p className="mb-0 small">
+                <strong>Просмотров:</strong> {car.views || 0}
+              </p>
             </div>
           </div>
         </div>

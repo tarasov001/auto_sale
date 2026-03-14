@@ -38,11 +38,19 @@ function AddCar() {
     
     // Создаем превью первого изображения
     if (files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setPreviewImage(event.target.result);
-      };
-      reader.readAsDataURL(files[0]);
+      const readers = files.map(file => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            resolve(event.target.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+      
+      Promise.all(readers).then((previews) => {
+        setPreviewImage(previews[0]); // Первое фото для превью
+      });
     } else {
       setPreviewImage(null);
     }
@@ -114,7 +122,8 @@ function AddCar() {
   // Окно успеха
   if (success && createdCar) {
     const imageUrl = createdCar.image || (createdCar.images && createdCar.images[0] && createdCar.images[0].image);
-    
+    const allImages = createdCar.images || [];
+
     return (
       <div className="row justify-content-center">
         <div className="col-md-8 col-lg-6">
@@ -123,7 +132,7 @@ function AddCar() {
               <h2 className="mb-0">✅ Объявление успешно создано!</h2>
             </div>
             <div className="card-body text-center">
-              <div className="mb-4">
+              <div className="mb-3">
                 {imageUrl ? (
                   <img
                     src={imageUrl}
@@ -141,10 +150,25 @@ function AddCar() {
                 )}
               </div>
               
+              {/* Миниатюры всех фото */}
+              {allImages.length > 1 && (
+                <div className="d-flex gap-2 justify-content-center mb-3 overflow-auto">
+                  {allImages.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img.image}
+                      alt={`Фото ${idx + 1}`}
+                      className="rounded"
+                      style={{ width: '60px', height: '45px', objectFit: 'cover' }}
+                    />
+                  ))}
+                </div>
+              )}
+
               <h3 className="mb-3">
                 {createdCar.brand} {createdCar.model}
               </h3>
-              
+
               <div className="row mb-3">
                 <div className="col-6">
                   <p className="mb-1 text-muted">Год</p>
@@ -155,14 +179,14 @@ function AddCar() {
                   <p className="fs-5 fw-bold">{createdCar.mileage} км</p>
                 </div>
               </div>
-              
+
               <div className="mb-4">
                 <p className="mb-1 text-muted">Цена</p>
                 <p className="fs-3 fw-bold text-primary">
                   {formatPrice(createdCar.price)} ₽
                 </p>
               </div>
-              
+
               <div className="d-grid gap-2">
                 <button
                   className="btn btn-success btn-lg"
@@ -321,16 +345,23 @@ function AddCar() {
                   accept="image/*"
                 />
                 <div className="form-text">
-                  Можно выбрать несколько файлов
+                  Можно выбрать несколько файлов (до 10)
                 </div>
-                {previewImage && (
-                  <div className="mt-2">
-                    <img
-                      src={previewImage}
-                      alt="Превью"
-                      className="rounded"
-                      style={{ width: '100px', height: '75px', objectFit: 'cover' }}
-                    />
+                {images.length > 0 && (
+                  <div className="mt-2 d-flex gap-2 flex-wrap">
+                    {images.map((file, idx) => (
+                      <div key={idx} className="position-relative">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Фото ${idx + 1}`}
+                          className="rounded"
+                          style={{ width: '80px', height: '60px', objectFit: 'cover' }}
+                        />
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                          {idx + 1}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
