@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: autosale
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-autosale_secure_password}
+    restart: always
+
+  web:
+    build: .
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 config.wsgi:application
+    volumes:
+      - media_volume:/app/media
+    depends_on:
+      - db
+    environment:
+      - DEBUG=False
+      - DB_NAME=autosale
+      - DB_USER=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-autosale_secure_password}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf
+      - media_volume:/app/media
+    depends_on:
+      - web
+    restart: always
+
+volumes:
+  postgres_data:
+  media_volume:
