@@ -177,9 +177,14 @@ function Home() {
                   <p className="card-text mb-1">
                     <strong className="text-primary">{formatPrice(car.price)} ₽</strong>
                   </p>
-                  <p className="card-text small text-muted mb-2">
+                  <p className="card-text small text-muted mb-1">
                     {car.year} г., {car.mileage} км
                   </p>
+                  {car.description && (
+                    <p className="card-text small text-muted mb-2 text-truncate" title={car.description}>
+                      {car.description}
+                    </p>
+                  )}
                   <Link to={`/car/${car.id}`} className="btn btn-sm btn-primary w-100">
                     Подробнее
                   </Link>
