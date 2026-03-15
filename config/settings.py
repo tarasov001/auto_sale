@@ -6,7 +6,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+
+# Разрешаем все хосты для разработки
+if ALLOWED_HOSTS == ['*']:
+    ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -99,7 +103,14 @@ CSRF_TRUSTED_ORIGINS = [
     'http://157.22.175.247',
     'http://localhost',
     'http://127.0.0.1',
+    'http://0.0.0.0',
 ]
+
+# Отключаем CSRF для API (используем JWT)
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = None
 
 # REST Framework
 REST_FRAMEWORK = {
