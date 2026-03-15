@@ -7,7 +7,7 @@
 - **Backend:** Django + Django REST Framework
 - **Frontend:** React + Bootstrap
 - **Database:** PostgreSQL
-- **Deployment:** Docker + VPS
+- **Deployment:** Docker + VPS + GitHub Actions
 
 ## Быстрый старт (локальная разработка)
 
@@ -31,7 +31,6 @@ docker-compose up --build
 | GET | `/api/cars/my/` | Мои объявления (требуется авторизация) |
 | PUT/PATCH | `/api/cars/{id}/` | Редактировать объявление |
 | DELETE | `/api/cars/{id}/` | Удалить объявление |
-| POST | `/api/car-images/` | Загрузить фото (требуется авторизация) |
 
 ### 3. Параметры фильтрации
 
@@ -47,20 +46,71 @@ docker-compose up --build
 
 ```
 autosale/
-├── config/          # Настройки Django
-├── api/             # API приложение
-│   ├── models.py    # Модели данных
+├── .github/workflows/    # GitHub Actions для деплоя
+├── config/               # Настройки Django
+├── api/                  # API приложение
+│   ├── models.py         # Модели данных
 │   ├── serializers.py
-│   ├── views.py     # API views
-│   └── urls.py      # Маршруты API
-├── frontend/        # React приложение (будет создано)
-├── docker-compose.yml
+│   ├── views.py          # API views
+│   └── urls.py           # Маршруты API
+├── frontend/             # React приложение
+├── docker-compose.yml    # Local development
+├── docker-compose.prod.yml  # Production
 ├── Dockerfile
+├── nginx.conf            # Nginx конфигурация
 └── requirements.txt
 ```
 
+---
+
+## 🚀 Деплой на VPS (автоматический)
+
+### Настройка GitHub Secrets
+
+1. Перейди в репозиторий на GitHub: **Settings → Secrets and variables → Actions**
+
+2. Добавь следующие секреты:
+
+| Секрет | Описание | Пример |
+|--------|----------|--------|
+| `SSH_PRIVATE_KEY` | SSH ключ для доступа к серверу | Содержимое `~/.ssh/github_actions` |
+| `VPS_HOST` | IP адрес сервера | `123.45.67.89` |
+| `VPS_USER` | Пользователь сервера | `root` |
+| `SECRET_KEY` | Секретный ключ Django | `django-insecure-...` |
+| `DB_PASSWORD` | Пароль для БД | `secure_password_123` |
+| `ALLOWED_HOSTS` | Разрешённые хосты | `*` или IP сервера |
+
+**Подробная инструкция:** см. [GITHUB_SECRETS.md](GITHUB_SECRETS.md)
+
+### Автоматический деплой
+
+После настройки секретов, при каждом push в ветку `main`:
+
+```
+Push → GitHub Actions → Деплой на VPS → Сайт обновлён!
+```
+
+### Ручной деплой (если нужно)
+
+```bash
+# Подключись к серверу
+ssh root@YOUR_SERVER_IP
+
+# Перейди в директорию проекта
+cd /opt/autosale
+
+# Перезапусти контейнеры
+sudo docker compose down
+sudo docker compose up -d
+
+# Посмотри логи
+sudo docker compose logs -f
+```
+
+---
+
 ## Дальнейшие шаги
 
-1. Создание React фронтенда
-2. Настройка деплоя на VPS
-3. Добавление дополнительных функций
+1. Настройка SSL (HTTPS) через Certbot
+2. Добавление уведомлений о деплое в Telegram
+3. Мониторинг и логирование
