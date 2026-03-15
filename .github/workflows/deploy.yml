@@ -29,16 +29,28 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       run: |
+        echo "📁 Копируем файлы на сервер..."
+        
         # Копируем файлы на сервер
         scp -r .github/workflows/deploy-config.sh ${VPS_USER}@${VPS_HOST}:/tmp/deploy.sh
         scp docker-compose.prod.yml ${VPS_USER}@${VPS_HOST}:/tmp/docker-compose.prod.yml
         scp Dockerfile ${VPS_USER}@${VPS_HOST}:/tmp/Dockerfile
         scp requirements.txt ${VPS_USER}@${VPS_HOST}:/tmp/requirements.txt
-        scp nginx.conf ${VPS_USER}@${VPS_HOST}:/tmp/nginx.conf
+        
+        # Копируем nginx.conf с проверкой
+        if [ -f nginx.conf ]; then
+            echo "✅ nginx.conf найден, копируем..."
+            scp nginx.conf ${VPS_USER}@${VPS_HOST}:/tmp/nginx.conf
+        else
+            echo "❌ nginx.conf не найден в репозитории!"
+        fi
+        
         scp -r api ${VPS_USER}@${VPS_HOST}:/tmp/api
         scp -r config ${VPS_USER}@${VPS_HOST}:/tmp/config
         scp -r frontend ${VPS_USER}@${VPS_HOST}:/tmp/frontend
         scp manage.py ${VPS_USER}@${VPS_HOST}:/tmp/manage.py
+        
+        echo "📦 Файлы скопированы, запускаем деплой..."
         
         # Выполняем деплой на сервере
         ssh ${VPS_USER}@${VPS_HOST} "

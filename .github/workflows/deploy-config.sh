@@ -67,7 +67,39 @@ cd /opt/autosale
 cp /tmp/docker-compose.prod.yml ./docker-compose.yml
 cp /tmp/Dockerfile ./Dockerfile
 cp /tmp/requirements.txt ./requirements.txt
-cp /tmp/nginx.conf ./nginx.conf
+
+# Копируем nginx.conf и проверяем
+if [ -f /tmp/nginx.conf ]; then
+    cp /tmp/nginx.conf ./nginx.conf
+    echo "✅ nginx.conf скопирован"
+else
+    echo "❌ nginx.conf не найден!"
+    # Создаём дефолтный
+    cat > ./nginx.conf << 'NGINX_EOF'
+server {
+    listen 80;
+    server_name _;
+    client_max_body_size 20M;
+    location / {
+        proxy_pass http://web:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /media/ {
+        alias /app/media/;
+        expires 30d;
+    }
+    location /static/ {
+        alias /app/staticfiles/;
+        expires 7d;
+    }
+}
+NGINX_EOF
+    echo "✅ Создан дефолтный nginx.conf"
+fi
+
 cp -r /tmp/api ./api
 cp -r /tmp/config ./config
 cp -r /tmp/frontend ./frontend
