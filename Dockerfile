@@ -15,8 +15,10 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем фронтенд и собираем
-COPY frontend/package*.json ./frontend/
+# Копируем весь фронтенд
+COPY frontend/ ./frontend/
+
+# Собираем фронтенд
 WORKDIR /app/frontend
 RUN npm install
 RUN npm run build
