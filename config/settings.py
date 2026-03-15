@@ -94,6 +94,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF для работы с любых устройств
+CSRF_TRUSTED_ORIGINS = [
+    'http://157.22.175.247',
+    'http://localhost',
+    'http://127.0.0.1',
+]
+
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

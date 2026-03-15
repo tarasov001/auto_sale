@@ -78,7 +78,7 @@ cp /tmp/manage.py ./manage.py
 tee .env > /dev/null <<EOF
 SECRET_KEY=${SECRET_KEY}
 DB_PASSWORD=${DB_PASSWORD}
-ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+ALLOWED_HOSTS=*
 DB_NAME=autosale
 DB_USER=postgres
 DB_HOST=db
@@ -87,6 +87,8 @@ DEBUG=False
 MEDIA_URL=/media/
 MEDIA_ROOT=/app/media
 EOF
+
+echo "✅ .env создан с ALLOWED_HOSTS=*"
 
 # Останавливаем старые контейнеры
 echo "📦 Остановка старых контейнеров..."
