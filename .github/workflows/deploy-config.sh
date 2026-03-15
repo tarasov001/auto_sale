@@ -11,21 +11,69 @@ ALLOWED_HOSTS=$3
 
 echo "🚀 Начинаю деплой AutoSale..."
 
+# ============================================
+# УСТАНОВКА DOCKER (если не установлен)
+# ============================================
+if ! command -v docker &> /dev/null; then
+    echo "🐳 Docker не найден. Устанавливаем..."
+    
+    # Обновляем пакеты
+    apt update
+    
+    # Устанавливаем зависимости
+    apt install -y apt-transport-https ca-certificates curl gnupg lsb-release
+    
+    # Добавляем GPG ключ Docker
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    
+    # Добавляем репозиторий Docker
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
+    # Устанавливаем Docker
+    apt update
+    apt install -y docker-ce docker-ce-cli containerd.io
+    
+    # Устанавливаем Docker Compose Plugin
+    apt install -y docker-compose-plugin
+    
+    # Проверяем установку
+    docker --version
+    docker compose version
+    
+    echo "✅ Docker установлен!"
+else
+    echo "✅ Docker уже установлен"
+    docker --version
+fi
+
+# ============================================
+# НАСТРОЙКА DOCKER
+# ============================================
+# Убедимся, что Docker запущен
+systemctl enable docker
+systemctl start docker
+
+echo "🔧 Настройка Docker завершена..."
+
+# ============================================
+# ДЕПЛОЙ ПРИЛОЖЕНИЯ
+# ============================================
+
 # Создаем директорию приложения
-sudo mkdir -p /opt/autosale
+mkdir -p /opt/autosale
 cd /opt/autosale
 
 # Копируем файлы из временной директории
-sudo cp /tmp/docker-compose.prod.yml ./docker-compose.yml
-sudo cp /tmp/Dockerfile ./Dockerfile
-sudo cp /tmp/requirements.txt ./requirements.txt
-sudo cp -r /tmp/api ./api
-sudo cp -r /tmp/config ./config
-sudo cp -r /tmp/frontend ./frontend
-sudo cp /tmp/manage.py ./manage.py
+cp /tmp/docker-compose.prod.yml ./docker-compose.yml
+cp /tmp/Dockerfile ./Dockerfile
+cp /tmp/requirements.txt ./requirements.txt
+cp -r /tmp/api ./api
+cp -r /tmp/config ./config
+cp -r /tmp/frontend ./frontend
+cp /tmp/manage.py ./manage.py
 
 # Создаем .env файл
-sudo tee .env > /dev/null <<EOF
+tee .env > /dev/null <<EOF
 SECRET_KEY=${SECRET_KEY}
 DB_PASSWORD=${DB_PASSWORD}
 ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
@@ -40,28 +88,28 @@ EOF
 
 # Останавливаем старые контейнеры
 echo "📦 Остановка старых контейнеров..."
-sudo docker compose down || true
+docker compose down || true
 
 # Собираем и запускаем контейнеры
 echo "🔨 Сборка и запуск контейнеров..."
-sudo docker compose build --no-cache
-sudo docker compose up -d
+docker compose build --no-cache
+docker compose up -d
 
 # Ждем пока БД запустится
 echo "⏳ Ожидание запуска БД..."
-sleep 10
+sleep 15
 
 # Применяем миграции
 echo "📋 Применение миграций..."
-sudo docker compose exec -T web python manage.py migrate
+docker compose exec -T web python manage.py migrate
 
 # Собираем статику
 echo "📁 Сборка статики..."
-sudo docker compose exec -T web python manage.py collectstatic --noinput
+docker compose exec -T web python manage.py collectstatic --noinput
 
 # Создаем суперпользователя если нет
 echo "👤 Проверка суперпользователя..."
-sudo docker compose exec -T web python manage.py shell -c "
+docker compose exec -T web python manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()
 if not User.objects.filter(username='admin').exists():
@@ -73,7 +121,7 @@ else:
 
 # Очищаем временные файлы
 echo "🧹 Очистка..."
-sudo rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirements.txt /tmp/api /tmp/config /tmp/frontend /tmp/manage.py
+rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirements.txt /tmp/api /tmp/config /tmp/frontend /tmp/manage.py
 
 echo "✅ Деплой завершен!"
 echo ""
