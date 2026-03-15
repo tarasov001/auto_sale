@@ -71,7 +71,8 @@ cp /tmp/requirements.txt ./requirements.txt
 # Копируем nginx.conf и проверяем
 if [ -f /tmp/nginx.conf ]; then
     cp /tmp/nginx.conf ./nginx.conf
-    echo "✅ nginx.conf скопирован"
+    echo "✅ nginx.conf скопирован в ./nginx.conf"
+    ls -la ./nginx.conf
 else
     echo "❌ nginx.conf не найден!"
     # Создаём дефолтный
@@ -104,6 +105,10 @@ cp -r /tmp/api ./api
 cp -r /tmp/config ./config
 cp -r /tmp/frontend ./frontend
 cp /tmp/manage.py ./manage.py
+
+# Проверяем что все файлы на месте
+echo "📁 Проверка файлов:"
+ls -la /opt/autosale/
 
 # Создаем .env файл
 tee .env > /dev/null <<EOF
