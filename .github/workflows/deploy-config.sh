@@ -67,6 +67,7 @@ cd /opt/autosale
 cp /tmp/docker-compose.prod.yml ./docker-compose.yml
 cp /tmp/Dockerfile ./Dockerfile
 cp /tmp/requirements.txt ./requirements.txt
+cp /tmp/nginx.conf ./nginx.conf
 cp -r /tmp/api ./api
 cp -r /tmp/config ./config
 cp -r /tmp/frontend ./frontend
@@ -121,7 +122,7 @@ else:
 
 # Очищаем временные файлы
 echo "🧹 Очистка..."
-rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirements.txt /tmp/api /tmp/config /tmp/frontend /tmp/manage.py
+rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirements.txt /tmp/nginx.conf /tmp/api /tmp/config /tmp/frontend /tmp/manage.py
 
 echo "✅ Деплой завершен!"
 echo ""

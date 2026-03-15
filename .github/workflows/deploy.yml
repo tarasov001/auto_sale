@@ -34,6 +34,7 @@ jobs:
         scp docker-compose.prod.yml ${VPS_USER}@${VPS_HOST}:/tmp/docker-compose.prod.yml
         scp Dockerfile ${VPS_USER}@${VPS_HOST}:/tmp/Dockerfile
         scp requirements.txt ${VPS_USER}@${VPS_HOST}:/tmp/requirements.txt
+        scp nginx.conf ${VPS_USER}@${VPS_HOST}:/tmp/nginx.conf
         scp -r api ${VPS_USER}@${VPS_HOST}:/tmp/api
         scp -r config ${VPS_USER}@${VPS_HOST}:/tmp/config
         scp -r frontend ${VPS_USER}@${VPS_HOST}:/tmp/frontend
