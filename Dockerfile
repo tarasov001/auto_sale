@@ -27,7 +27,8 @@ RUN npm run build
 WORKDIR /app
 COPY . .
 
-# Копируем React сборку в staticfiles
+# Создаём staticfiles и копируем React сборку
+RUN mkdir -p /app/staticfiles
 RUN cp -r /app/frontend/build/* /app/staticfiles/
 
 # Сборка Django статики (admin, DRF)
