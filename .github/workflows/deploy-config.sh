@@ -82,6 +82,18 @@ server {
     server_name _;
     client_max_body_size 20M;
     location / {
+        root /app/staticfiles;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+    location /api/ {
+        proxy_pass http://web:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /admin/ {
         proxy_pass http://web:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -91,10 +103,7 @@ server {
     location /media/ {
         alias /app/media/;
         expires 30d;
-    }
-    location /static/ {
-        alias /app/staticfiles/;
-        expires 7d;
+        add_header Cache-Control "public";
     }
 }
 NGINX_EOF
@@ -172,7 +181,19 @@ rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirem
 echo ""
 echo "🔧 Финальная проверка..."
 docker compose ps
-docker compose exec -T nginx cat /etc/nginx/conf.d/default.conf | head -5
+
+# Перезапускаем nginx чтобы подхватил конфиг
+echo "🔄 Перезапуск nginx..."
+docker compose restart nginx
+sleep 5
+
+echo ""
+echo "📊 Статус контейнеров:"
+docker compose ps
+
+echo ""
+echo "📄 Проверка nginx.conf:"
+docker compose exec -T nginx cat /etc/nginx/conf.d/default.conf | head -10
 
 echo ""
 echo "✅ Деплой завершен!"

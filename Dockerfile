@@ -34,6 +34,13 @@ RUN cp -r /app/frontend/build/* /app/staticfiles/
 # Сборка Django статики (admin, DRF)
 RUN python manage.py collectstatic --noinput
 
+# Создаём media директорию
+RUN mkdir -p /app/media
+
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "config.wsgi:application"]
+# Healthcheck для проверки работоспособности
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import socket; s = socket.socket(); s.connect(('localhost', 8000)); s.close()" || exit 1
+
+CMD ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 config.wsgi:application"]
