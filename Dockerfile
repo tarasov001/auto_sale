@@ -38,8 +38,9 @@ RUN python manage.py collectstatic --noinput
 # Создаём media директорию
 RUN mkdir -p /app/media
 
-# Копируем nginx конфиг
+# Копируем nginx конфиг и убираем дефолтный сайт
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN rm -f /etc/nginx/sites-enabled/default
 
 # Открываем порты
 EXPOSE 80
