@@ -67,64 +67,12 @@ cd /opt/autosale
 cp /tmp/docker-compose.prod.yml ./docker-compose.yml
 cp /tmp/Dockerfile ./Dockerfile
 cp /tmp/requirements.txt ./requirements.txt
-
-# Копируем nginx.conf и проверяем
-if [ -f /tmp/nginx.conf ]; then
-    cp /tmp/nginx.conf ./nginx.conf
-    echo "✅ nginx.conf скопирован в ./nginx.conf"
-    ls -la ./nginx.conf
-else
-    echo "❌ nginx.conf не найден!"
-    # Создаём дефолтный
-    cat > ./nginx.conf << 'NGINX_EOF'
-server {
-    listen 80;
-    server_name _;
-    client_max_body_size 20M;
-    location / {
-        root /app/staticfiles;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-    }
-    location /api/ {
-        proxy_pass http://web:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    location /admin/ {
-        proxy_pass http://web:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    location /media/ {
-        alias /app/media/;
-        expires 30d;
-        add_header Cache-Control "public";
-    }
-}
-NGINX_EOF
-    echo "✅ Создан дефолтный nginx.conf"
-fi
-
-# Проверяем docker-compose.yml и убираем :ro если есть
-if grep -q ":ro" docker-compose.yml; then
-    echo "⚠️  Находим :ro в docker-compose.yml, убираем..."
-    sed -i 's|:ro||g' docker-compose.yml
-    echo "✅ docker-compose.yml обновлён"
-fi
-
+cp /tmp/nginx.conf ./nginx.conf
+cp /tmp/supervisord.conf ./supervisord.conf
 cp -r /tmp/api ./api
 cp -r /tmp/config ./config
 cp -r /tmp/frontend ./frontend
 cp /tmp/manage.py ./manage.py
-
-# Проверяем что все файлы на месте
-echo "📁 Проверка файлов:"
-ls -la /opt/autosale/
 
 # Создаем .env файл
 tee .env > /dev/null <<EOF
@@ -145,55 +93,22 @@ echo "📦 Остановка старых контейнеров..."
 docker compose down || true
 
 # Собираем и запускаем контейнеры
-echo "🔨 Сборка и запуск контейнеров..."
+echo "🔨 Сборка и запуск контейнеров (это займёт 10-15 минут)..."
 docker compose build --no-cache
 docker compose up -d
 
-# Ждем пока БД запустится
-echo "⏳ Ожидание запуска БД..."
-sleep 15
+# Ждем пока приложение запустится
+echo "⏳ Ожидание запуска приложения..."
+sleep 30
 
-# Применяем миграции
-echo "📋 Применение миграций..."
-docker compose exec -T web python manage.py migrate
-
-# Собираем статику
-echo "📁 Сборка статики..."
-docker compose exec -T web python manage.py collectstatic --noinput
-
-# Создаем суперпользователя если нет
-echo "👤 Проверка суперпользователя..."
-docker compose exec -T web python manage.py shell -c "
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-    print('Суперпользователь создан: admin / admin123')
-else:
-    print('Суперпользователь уже существует')
-"
-
-# Очищаем временные файлы
-echo "🧹 Очистка..."
-rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirements.txt /tmp/nginx.conf /tmp/api /tmp/config /tmp/frontend /tmp/manage.py
-
-# Финальная проверка
-echo ""
-echo "🔧 Финальная проверка..."
-docker compose ps
-
-# Перезапускаем nginx чтобы подхватил конфиг
-echo "🔄 Перезапуск nginx..."
-docker compose restart nginx
-sleep 5
-
-echo ""
+# Проверяем статус
 echo "📊 Статус контейнеров:"
 docker compose ps
 
+# Проверяем логи
 echo ""
-echo "📄 Проверка nginx.conf:"
-docker compose exec -T nginx cat /etc/nginx/conf.d/default.conf | head -10
+echo "📄 Последние логи:"
+docker compose logs --tail=20
 
 echo ""
 echo "✅ Деплой завершен!"
@@ -203,3 +118,7 @@ echo "📍 Admin: http://${ALLOWED_HOSTS:-localhost}/admin/"
 echo "📍 Логин/пароль админа: admin / admin123"
 echo ""
 echo "⚠️  Смени пароль админа после первого входа!"
+
+# Очищаем временные файлы
+echo "🧹 Очистка..."
+rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirements.txt /tmp/nginx.conf /tmp/supervisord.conf /tmp/api /tmp/config /tmp/frontend /tmp/manage.py
