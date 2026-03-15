@@ -101,6 +101,13 @@ NGINX_EOF
     echo "✅ Создан дефолтный nginx.conf"
 fi
 
+# Проверяем docker-compose.yml и убираем :ro если есть
+if grep -q ":ro" docker-compose.yml; then
+    echo "⚠️  Находим :ro в docker-compose.yml, убираем..."
+    sed -i 's|:ro||g' docker-compose.yml
+    echo "✅ docker-compose.yml обновлён"
+fi
+
 cp -r /tmp/api ./api
 cp -r /tmp/config ./config
 cp -r /tmp/frontend ./frontend
@@ -161,6 +168,13 @@ else:
 echo "🧹 Очистка..."
 rm -rf /tmp/deploy.sh /tmp/docker-compose.prod.yml /tmp/Dockerfile /tmp/requirements.txt /tmp/nginx.conf /tmp/api /tmp/config /tmp/frontend /tmp/manage.py
 
+# Финальная проверка
+echo ""
+echo "🔧 Финальная проверка..."
+docker compose ps
+docker compose exec -T nginx cat /etc/nginx/conf.d/default.conf | head -5
+
+echo ""
 echo "✅ Деплой завершен!"
 echo ""
 echo "📍 Сайт доступен: http://${ALLOWED_HOSTS:-localhost}"
